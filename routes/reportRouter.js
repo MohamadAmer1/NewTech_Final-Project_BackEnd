@@ -1,12 +1,12 @@
-import express from "express"
+import express from "express";
 import { addOneReport, deleteOneReport, getAllReports, getOneReportById, updateOneReport } from "../controllers/reportController.js";
-const router = express.Router()
+import { authMiddleware, authorizeRoles } from "../middleware/authMiddleWare.js";
+const router = express.Router();
 
-router.get("/",getAllReports)
-router.get("/:id",getOneReportById)
-router.post("/",addOneReport)
-router.put("/:id",updateOneReport)
-router.delete("/:id",deleteOneReport)
-
+router.get("/", authMiddleware, authorizeRoles("RESIDENT", "STAFF", "FIELD_GUARD"), getAllReports);
+router.get("/:id", authMiddleware, authorizeRoles("RESIDENT", "STAFF", "FIELD_GUARD"), getOneReportById);
+router.post("/", authMiddleware, authorizeRoles("RESIDENT"), addOneReport);
+router.put("/:id", authMiddleware, authorizeRoles("STAFF", "FIELD_GUARD"), updateOneReport);
+router.delete("/:id", authMiddleware, authorizeRoles("STAFF"), deleteOneReport);
 
 export default router;
