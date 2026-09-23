@@ -1,4 +1,21 @@
+import cloudinary from "../config/cloudinary.js";
 import Report from "../models/report.js";
+
+const uploadPhotoToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream((error, result) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(result);
+    });
+
+    uploadStream.on("error", (error) => {
+      reject(error);
+    });
+    uploadStream.end(buffer);
+  });
+};
 
 export const getAllReports = async (req, res) => {
   try {
@@ -31,7 +48,19 @@ export const getOneReportById = async (req, res) => {
 
 export const addOneReport = async (req, res) => {
   try {
-    const { name, phone, title, description, category, location, licensePlate, priority, status, photoUrl } = req.body;
+    const { name, phone, title, description, category, location, licensePlate, priority, status } = req.body;
+
+    let photoUrl = "";
+
+    if (req.file) {
+      try {
+        const uploadResult = await uploadPhotoToCloudinary(req.file.buffer);
+        photoUrl = uploadResult.secure_url;
+      } catch (err) {
+        console.error("There is no photo acquainted", err.message);
+      }
+    }
+
     const newReport = await Report.create({
       name,
       phone,
@@ -44,10 +73,11 @@ export const addOneReport = async (req, res) => {
       status,
       photoUrl,
     });
-    res.status(201).json(newReport);
+
+    return res.status(201).json(newReport);
   } catch (err) {
-    res.status(404).json({
-      message: "Error adding Report",
+    return res.status(400).json({
+      message: "Error adding report",
       error: err.message,
     });
   }

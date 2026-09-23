@@ -20,6 +20,18 @@ app.get("/", (req, res) => {
   res.status(200).send("HI HOME");
 });
 
+app.use((err, req, res, next) => {
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({
+      message: "Photo must be 5 MB or smaller",
+    });
+  }
+
+  return res.status(400).json({
+    message: err.message || "Request failed",
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`server is running on http://localhost:${PORT}`);
 });
