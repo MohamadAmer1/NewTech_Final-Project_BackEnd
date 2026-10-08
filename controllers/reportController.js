@@ -5,8 +5,13 @@ import mongoose from "mongoose";
 
 export const getAllReports = async (req, res) => {
   try {
-    const filter = req.user.role === "RESIDENT" ? { resident: req.user.userId } : {};
+    const filter = {};
 
+    if (req.user.role === "RESIDENT") {
+      filter.resident = req.user.userId;
+    } else if (req.user.role === "FIELD_GUARD") {
+      filter.assignedFieldGuard = req.user.userId;
+    }
     const reports = await Report.find(filter).populate("resident", "name").sort({ createdAt: -1 });
     res.status(200).json(reports);
   } catch (err) {
@@ -19,8 +24,13 @@ export const getAllReports = async (req, res) => {
 
 export const getOneReportById = async (req, res) => {
   try {
-    const filter = req.user.role === "RESIDENT" ? { _id: req.params.id, resident: req.user.userId } : { _id: req.params.id };
+    const filter = { _id: req.params.id };
 
+    if (req.user.role === "RESIDENT") {
+      filter.resident = req.user.userId;
+    } else if (req.user.role === "FIELD_GUARD") {
+      filter.assignedFieldGuard = req.user.userId;
+    }
     const report = await Report.findOne(filter);
     if (!report) {
       return res.status(404).json({
@@ -160,6 +170,80 @@ export const uploadFieldGuardPhoto = async (req, res) => {
 
     return res.status(500).json({
       message: "Could not save the field guard photo",
+    });
+  }
+};
+
+export const updateFieldGuardReportStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, rejectionReason } = req.body ?? {};
+
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      return res.status(400).json({
+        message: "Invalid report ID",
+      });
+    }
+
+    if (!["IN PROGRESS", "RESOLVED", "REJECTED"].includes(status)) {
+      return res.status(400).json({
+        message: "Invalid report status",
+      });
+    }
+
+    if (
+      status === "REJECTED" &&
+      (typeof rejectionReason !== "string" || !rejectionReason.trim())
+    ) {
+      return res.status(400).json({
+        message: "A rejection reason is required",
+      });
+    }
+
+    const previousStatuses =
+      status === "IN PROGRESS"
+        ? ["DISPATCHED"]
+        : status === "RESOLVED"
+          ? ["IN PROGRESS"]
+          : ["DISPATCHED", "IN PROGRESS"];
+
+    const report = await Report.findOneAndUpdate(
+      {
+        _id: id,
+        assignedFieldGuard: req.user.userId,
+        assignedTeam: "FIELD_GUARD",
+        status: { $in: previousStatuses },
+      },
+      {
+        $set: {
+          status,
+          rejectionReason:
+            status === "REJECTED" ? rejectionReason.trim() : "",
+          resolvedAt:
+            status === "RESOLVED" || status === "REJECTED"
+              ? new Date()
+              : null,
+        },
+      },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
+    ).populate("resident", "name");
+
+    if (!report) {
+      return res.status(409).json({
+        message:
+          "Report is not assigned to you or its stage has changed. Refresh the page.",
+      });
+    }
+
+    return res.status(200).json(report);
+  } catch (error) {
+    console.error("Error updating field guard report:", error);
+
+    return res.status(500).json({
+      message: "Could not update the report",
     });
   }
 };
