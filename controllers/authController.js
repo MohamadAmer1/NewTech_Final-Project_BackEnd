@@ -52,14 +52,14 @@ export const loginUser = async (req, res) => {
 
     const userExist = await User.findOne({ email });
     if (!userExist) {
-      return res.status(409).json({
+      return res.status(401).json({
         message: "Email is Wrong!",
       });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, userExist.password);
     if (!isPasswordCorrect) {
-      return res.status(404).json({
+      return res.status(401).json({
         message: "Password is Wrong",
       });
     }
@@ -93,7 +93,7 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(404).json({
+    res.status(500).json({
       message: "Error in Logging in!",
       error: err.message,
     });

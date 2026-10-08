@@ -1,21 +1,34 @@
 import express from "express";
 import reportRouter from "./routes/reportRouter.js";
 import authRouter from "./routes/authRouter.js";
+import fineRouter from "./routes/fineRouter.js";
+import vehicleRouter from "./routes/vehicleRouter.js";
+
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
+import cors from "cors";
 
 dotenv.config();
 connectDB();
 const app = express();
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
 const PORT = process.env.PORT;
 
-
-app.use("/auth", authRouter)
+app.use("/auth", authRouter);
 app.use("/reports", reportRouter);
+app.use("/fines", fineRouter);
+app.use("/vehicles", vehicleRouter);
 app.get("/", (req, res) => {
   res.status(200).send("HI HOME");
 });
