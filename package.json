@@ -20,9 +20,12 @@
   },
   "homepage": "https://github.com/MohamadAmer1/NewTech_Final-Project_BackEnd#readme",
   "dependencies": {
+    "@novu/api": "^3.19.1",
+    "@novu/framework": "^2.13.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.11.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^18.0.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
