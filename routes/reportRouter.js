@@ -7,6 +7,7 @@ import {
   getFieldGuards,
   getOneReportById,
   rejectReport,
+  updateFieldGuardReportStatus,
   updateMaintenanceStatus,
 } from "../controllers/reportController.js";
 import { authMiddleware, authorizeRoles } from "../middleware/authMiddleWare.js";
@@ -25,6 +26,7 @@ router.post("/", authMiddleware, authorizeRoles("RESIDENT"), upload.single("phot
 router.put("/:id/assign", authMiddleware, authorizeRoles("STAFF"), assignReport);
 router.put("/:id/reject", authMiddleware, authorizeRoles("STAFF"), rejectReport);
 router.put("/:id/maintenance-status", authMiddleware, authorizeRoles("STAFF"), updateMaintenanceStatus);
+router.put("/:id/field-guard-status", authMiddleware, authorizeRoles("FIELD_GUARD"), updateFieldGuardReportStatus);
 router.delete("/:id", authMiddleware, authorizeRoles("STAFF"), deleteOneReport);
 
 export default router;
