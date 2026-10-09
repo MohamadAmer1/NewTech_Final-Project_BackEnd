@@ -5,11 +5,19 @@ import Vehicle from "../models/vehicle.js";
 
 import { uploadPhotoToCloudinary } from "../utils/uploadPhotoToCloudinary.js";
 import { normalizeLicensePlate } from "../utils/normalizeLicensePlate.js";
+import { fineOptions } from "../config/fineOptions.js";
 
 export const addOneFine = async (req, res) => {
   try {
-    const { licensePlate: submittedPlate, violationType, amount } = req.body ?? {};
+    const { licensePlate: submittedPlate, violationType } = req.body ?? {};
 
+    const selectedViolation = fineOptions.find((option) => option.name === violationType);
+
+    if (!selectedViolation) {
+      return res.status(400).json({
+        message: "Choose a valid violation type",
+      });
+    }
     const licensePlate = normalizeLicensePlate(submittedPlate);
 
     if (!licensePlate) {
@@ -41,7 +49,7 @@ export const addOneFine = async (req, res) => {
       resident: resident._id,
       licensePlate: vehicle.licensePlate,
       violationType,
-      amount,
+      amount: selectedViolation.amount,
       status: "UNPAID",
       resolvedAt: null,
     });
@@ -50,7 +58,7 @@ export const addOneFine = async (req, res) => {
 
     if (req.file) {
       const uploadResult = await uploadPhotoToCloudinary(req.file.buffer);
-      photoUrl = uploadResult.secure_url;
+      fine.photoUrl = uploadResult.secure_url;
     }
     await fine.save();
 
