@@ -3,6 +3,7 @@ import reportRouter from "./routes/reportRouter.js";
 import authRouter from "./routes/authRouter.js";
 import fineRouter from "./routes/fineRouter.js";
 import vehicleRouter from "./routes/vehicleRouter.js";
+import appealRouter from "./routes/appealRouter.js";
 
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -29,6 +30,8 @@ app.use("/auth", authRouter);
 app.use("/reports", reportRouter);
 app.use("/fines", fineRouter);
 app.use("/vehicles", vehicleRouter);
+app.use("/appeals", appealRouter);
+
 app.get("/", (req, res) => {
   res.status(200).send("HI HOME");
 });
